@@ -3,7 +3,9 @@ resource "aws_vpc" "terraform_vpc" {
   instance_tenancy = "default"
 
   tags = {
-    Name = "clc15-tf-vpc"
+    Name = "tf-vpc"
+    CC    = "123456"
+    Owner = "DevOps"
   }
 }
 
