@@ -119,3 +119,4 @@ resource "aws_default_security_group" "default" {
   vpc_id = aws_vpc.terraform_vpc.id
   tags = { Name = "my-iac-sg", Owner = "DevOps" }
 }
+ 
