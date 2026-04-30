@@ -120,3 +120,4 @@ resource "aws_default_security_group" "default" {
   tags = { Name = "my-iac-sg", Owner = "DevOps" }
 }
  
+ 
