@@ -1,5 +1,4 @@
-name: Apply Changes
-
+name: Deploy Infrastructure
 on:
   push:
     branches:
@@ -7,47 +6,44 @@ on:
     paths-ignore:
       - '.github/**'
 
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+
 jobs:
-  check-tf-vuls:
-    name: Check TF Vuls
+  Checkov:
+    name: 'Check TF Vuls'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Run Checkov
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      - name: Test with Checkov
+        id: checkov
         uses: bridgecrewio/checkov-action@master
         with:
           directory: .
           framework: terraform
-          soft_fail: true
 
-  apply:
-    name: Apply Changes
+  Apply:
+    name: 'Apply Changes'
     runs-on: ubuntu-latest
-    needs: check-tf-vuls
     environment: production
-
+    needs: Checkov
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: us-east-1
-
+          terraform_wrapper: false
       - name: Terraform Init
         run: terraform init
-
-      - name: Terraform Plan
-        run: terraform plan -var="bucket_name=clc15-zcanassa-terraform"
-
       - name: Terraform Apply
-        run: terraform apply --auto-approve -var="bucket_name=clc15-zcanassa-terraform"
+        run: terraform apply --auto-approve
